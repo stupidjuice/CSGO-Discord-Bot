@@ -11,13 +11,16 @@ token = "token"
 
 client = commands.Bot(command_prefix = "!")
 
-tStarPixels =         [ [195, 128], [200, 125], [256, 128], [268, 144], [196, 131] ]
-tBorderPixels =       [ [224, 72],  [192, 172], [182, 160], [280, 154], [212, 183] ]
-tKnifePixels =        [ [250, 144], [235, 167], [252, 145], [227, 173], [255, 136] ]
+tStarPixels =          [ [195, 128], [200, 125], [256, 128], [268, 144], [196, 131] ]
+tBorderPixels =        [ [224, 72],  [192, 172], [182, 160], [280, 154], [212, 183] ]
+tKnifePixels =         [ [250, 144], [235, 167], [252, 145], [227, 173], [255, 136] ]
 
-ctDarkWingPixels =    [ [209, 96],  [244, 124], [249, 159], [240, 93],  [223, 91]  ]
-ctWireCuttersPixels = [ [209, 124], [260, 152], [271, 104], [221, 132], [213, 133] ]
-ctBorderPixels =      [ [224, 72],  [192, 172], [182, 160], [280, 154], [212, 183] ]
+ctDarkWingPixels =     [ [209, 96],  [244, 124], [249, 159], [240, 93],  [223, 91]  ]
+ctWireCuttersPixels =  [ [209, 124], [260, 152], [271, 104], [221, 132], [213, 133] ]
+ctBorderPixels =       [ [224, 72],  [192, 172], [182, 160], [280, 154], [212, 183] ]
+
+bombPlantedPixels =    [ [63, 74],   [36, 216],  [70, 4],    [69, 24],   [36, 165], [34, 50],  [64, 190], [72, 238], [63, 253], [40, 157]  ]
+notBombPlantedPixels = [ [34, 70],   [44, 105],  [34, 227],  [29, 90],   [51, 26],  [57, 112], [41, 241], [39, 119], [29, 193], [65, 154] ]
 
 @client.event
 async def on_ready():
@@ -26,54 +29,71 @@ async def on_ready():
 @client.command()
 async def start(ctx):
     isShowingWinLogo = False
+    isShowingBombPlantText = False
+    #wow nice variable name
+    bombPlantedAndIsCoutningRightNow = False
         
     twins = 0
     ctwins = 0
         
     await ctx.send("Starting Game!")
 
-    bounding_box = {'top': 0, 'left': 1152, 'width': 256, 'height': 290}
+    bounding_box_winlogo = {'top': 0, 'left': 1152, 'width': 256, 'height': 290}
+    bounding_box_bomb = { 'top': 1050, 'left': 1152, 'width': 256, 'height': 75 }
 
     sct = mss()
 
     while True:
-        sct_img = sct.grab(bounding_box)
-        sct_numpy = np.array(sct_img)
+        sct_img_winlogo = sct.grab(bounding_box_winlogo)
+        sct_img_bombplant = sct.grab(bounding_box_bomb)
+        sct_numpy_win = np.array(sct_img_winlogo)
+        sct_numpy_bomb = np.array(sct_img_bombplant)
 
-        cv2.imshow('screen', sct_numpy)
+        cv2.imshow('screen', sct_numpy_win)
+        cv2.imshow('bombplant', sct_numpy_bomb)
 
+        garbage = False
         TeamHasWon = False
         victoriousTeam = team.NONE
         proceedT = True
         proceedCT = False
+        bombPlanted =  False
 
         #--------------------------t--------------------------
         for i in tStarPixels:
-            TeamHasWon, victoriousTeam, proceedT = CheckPixels(sct_numpy, tStarPixels, colors.TSTAR, team.TERRORISTS)
+            TeamHasWon, victoriousTeam, proceedT = CheckPixels(sct_numpy_win, tStarPixels, colors.TSTAR, team.TERRORISTS)
 
         if proceedT:
-            TeamHasWon, victoriousTeam, proceedT = CheckPixels(sct_numpy, tBorderPixels, colors.TBORDER, team.TERRORISTS)
+            TeamHasWon, victoriousTeam, proceedT = CheckPixels(sct_numpy_win, tBorderPixels, colors.TBORDER, team.TERRORISTS)
 
         if proceedT:
-            TeamHasWon, victoriousTeam, proceedT = CheckPixels(sct_numpy, tKnifePixels, colors.TKNIFE, team.TERRORISTS)
+            TeamHasWon, victoriousTeam, proceedT = CheckPixels(sct_numpy_win, tKnifePixels, colors.TKNIFE, team.TERRORISTS)
 
 
         #--------------------------ct--------------------------
         if victoriousTeam == team.NONE:
-            TeamHasWon, victoriousTeam, proceedCT = CheckPixels(sct_numpy, ctDarkWingPixels, colors.CTDARKWING, team.COUNTERTERRORISTS)
+            TeamHasWon, victoriousTeam, proceedCT = CheckPixels(sct_numpy_win, ctDarkWingPixels, colors.CTDARKWING, team.COUNTERTERRORISTS)
 
         if proceedCT:
-            TeamHasWon, victoriousTeam, proceedCT = CheckPixels(sct_numpy, ctWireCuttersPixels, colors.CTWIRECUTTERS, team.COUNTERTERRORISTS)
+            TeamHasWon, victoriousTeam, proceedCT = CheckPixels(sct_numpy_win, ctWireCuttersPixels, colors.CTWIRECUTTERS, team.COUNTERTERRORISTS)
 
         if proceedCT:
-            TeamHasWon, victoriousTeam, proceedCT = CheckPixels(sct_numpy, ctBorderPixels, colors.CTBORDER, team.COUNTERTERRORISTS)
+            TeamHasWon, victoriousTeam, proceedCT = CheckPixels(sct_numpy_win, ctBorderPixels, colors.CTBORDER, team.COUNTERTERRORISTS)
 
+        #--------------------------bomb plant--------------------------
+        if victoriousTeam == team.NONE:
+            bombPlanted = CheckPixels(sct_numpy_bomb, bombPlantedPixels, colors.WHITETEXT, team.NONE)[2]
+            print(bombPlanted)
+        if bombPlanted:
+            bombPlanted = not CheckPixels(sct_numpy_bomb, notBombPlantedPixels, colors.WHITETEXT, team.NONE)[2]
 
         #print(CheckPixels(sct_numpy, ctDarkWingPixels, colors.CTBORDER, team.COUNTERTERRORISTS))
 
         if not TeamHasWon:
             isShowingWinLogo = False
-
+        if not bombPlanted:
+            isShowingBombPlantText = False
+        
         if TeamHasWon and not isShowingWinLogo:
             isShowingWinLogo = True
 
@@ -83,9 +103,13 @@ async def start(ctx):
             elif victoriousTeam == team.COUNTERTERRORISTS:
                 ctwins += 1
                 await ctx.send("Counter Terrorists Win! " + "Ts: " + str(twins) + "      CTs: " + str(ctwins))
-            
-            
             sleep(10)
+
+        if bombPlanted and not isShowingBombPlantText:
+            isShowingBombPlantText = True
+            
+            await ctx.send("The bomb has been planted!")
+            sleep(2)
 
         sleep(0.5)
 
@@ -116,6 +140,8 @@ class colors(enum.Enum):
     CTDARKWING =    [ 49,  42,  30,  255 ]
     CTWIRECUTTERS = [ 164, 155, 141, 255 ]
     CTBORDER =      [ 147, 123, 94,  255 ]
+
+    WHITETEXT =     [ 255, 255, 255, 255 ]
 
 class team(enum.Enum):
     TERRORISTS = 0
