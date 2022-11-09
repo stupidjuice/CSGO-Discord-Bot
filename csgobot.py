@@ -16,7 +16,7 @@ tBorderPixels =       [ [224, 72],  [192, 172], [182, 160], [280, 154], [212, 18
 tKnifePixels =        [ [250, 144], [235, 167], [252, 145], [227, 173], [255, 136] ]
 
 ctDarkWingPixels =    [ [209, 96],  [244, 124], [249, 159], [240, 93],  [223, 91]  ]
-ctWireCuttersPixels = [ [209, 124], [260, 153], [271, 105], [221, 132], [213, 133] ]
+ctWireCuttersPixels = [ [209, 124], [260, 152], [271, 104], [221, 132], [213, 133] ]
 ctBorderPixels =      [ [224, 72],  [192, 172], [182, 160], [280, 154], [212, 183] ]
 
 @client.event
@@ -39,8 +39,9 @@ async def start(ctx):
     while True:
         sct_img = sct.grab(bounding_box)
         sct_numpy = np.array(sct_img)
-        #sct_numpy[250, 159] = [ 0, 0, 255, 255 ]
+
         cv2.imshow('screen', sct_numpy)
+
         TeamHasWon = False
         victoriousTeam = team.NONE
         proceedT = True
@@ -66,6 +67,7 @@ async def start(ctx):
 
         if proceedCT:
             TeamHasWon, victoriousTeam, proceedCT = CheckPixels(sct_numpy, ctBorderPixels, colors.CTBORDER, team.COUNTERTERRORISTS)
+
 
         #print(CheckPixels(sct_numpy, ctDarkWingPixels, colors.CTBORDER, team.COUNTERTERRORISTS))
 
@@ -104,7 +106,6 @@ def CheckPixels(screen, pixels, color, currentteam):
         victoriousteam = currentteam
         proceed = True
         teamhaswon = True
-    print(victoriousteam)
     return (teamhaswon, victoriousteam, proceed)
 
 class colors(enum.Enum):
