@@ -19,7 +19,7 @@ ctDarkWingPixels =     [ [209, 96],  [244, 124], [249, 159], [240, 93],  [223, 9
 ctWireCuttersPixels =  [ [209, 124], [260, 152], [271, 104], [221, 132], [213, 133] ]
 ctBorderPixels =       [ [224, 72],  [192, 172], [182, 160], [280, 154], [212, 183] ]
 
-bombPlantedPixels =    [ [63, 74],   [36, 216],  [70, 4],    [69, 24],   [36, 165], [34, 50],  [64, 190], [72, 238], [63, 253], [40, 157]  ]
+bombPlantedPixels =    [ [63, 74],   [36, 216],  [70, 4],    [69, 24],   [36, 165], [34, 50],  [64, 190], [72, 238], [63, 253], [40, 157] ]
 notBombPlantedPixels = [ [34, 70],   [44, 105],  [34, 227],  [29, 90],   [51, 26],  [57, 112], [41, 241], [39, 119], [29, 193], [65, 154] ]
 
 @client.event
@@ -31,7 +31,7 @@ async def start(ctx):
     isShowingWinLogo = False
     isShowingBombPlantText = False
     #wow nice variable name
-    bombPlantedAndIsCoutningRightNow = False
+    bombPlantedAndIsCountingRightNow = False
         
     twins = 0
     ctwins = 0
@@ -44,20 +44,25 @@ async def start(ctx):
     sct = mss()
 
     while True:
-        sct_img_winlogo = sct.grab(bounding_box_winlogo)
+        #grab screenshots every (about) 0.2s
+        sct_img_winlogo =   sct.grab(bounding_box_winlogo)
         sct_img_bombplant = sct.grab(bounding_box_bomb)
-        sct_numpy_win = np.array(sct_img_winlogo)
-        sct_numpy_bomb = np.array(sct_img_bombplant)
+        sct_numpy_win =     np.array(sct_img_winlogo)
+        sct_numpy_bomb =    np.array(sct_img_bombplant)
 
-        cv2.imshow('screen', sct_numpy_win)
+        cv2.imshow('screen',    sct_numpy_win)
         cv2.imshow('bombplant', sct_numpy_bomb)
 
-        garbage = False
+        #resetting variables
         TeamHasWon = False
         victoriousTeam = team.NONE
         proceedT = True
         proceedCT = False
         bombPlanted =  False
+
+        #this checks if specefic pixles on screen are specific colors, and if (for example) pixel [224, 72] is colored [ 49,  61,  69,  255 ], and all other pixels
+        #that are checked are that color, assume that the terrorists have won
+        #same thing happens for cts and for the bomb planted text
 
         #--------------------------t--------------------------
         for i in tStarPixels:
@@ -83,17 +88,16 @@ async def start(ctx):
         #--------------------------bomb plant--------------------------
         if victoriousTeam == team.NONE:
             bombPlanted = CheckPixels(sct_numpy_bomb, bombPlantedPixels, colors.WHITETEXT, team.NONE)[2]
-            print(bombPlanted)
         if bombPlanted:
             bombPlanted = not CheckPixels(sct_numpy_bomb, notBombPlantedPixels, colors.WHITETEXT, team.NONE)[2]
 
-        #print(CheckPixels(sct_numpy, ctDarkWingPixels, colors.CTBORDER, team.COUNTERTERRORISTS))
-
+        #check if the win screens or bomb planted text is showing
         if not TeamHasWon:
             isShowingWinLogo = False
         if not bombPlanted:
             isShowingBombPlantText = False
         
+        #if this frame is the first frame that a win screen or bomb planted text is showing, message the discord server about it
         if TeamHasWon and not isShowingWinLogo:
             isShowingWinLogo = True
 
@@ -121,6 +125,7 @@ def CheckPixels(screen, pixels, color, currentteam):
     proceed = True
     teamhaswon = False
     victoriousteam = team.NONE
+    #if any pixel in the list is not the specified color, ignore the rest of the list and just say that win screens or bomb planted text are not being displayed
     for i in pixels:
         if list(screen[i[0], i[1]]) != color.value:
             teamhaswon = False
