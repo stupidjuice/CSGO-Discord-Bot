@@ -23,7 +23,6 @@ ctBorderPixels =      [ [224, 72],  [192, 172], [182, 160], [280, 154], [212, 18
 async def on_ready():
     print("I'm online now!")
 
-
 @client.command()
 async def start(ctx):
     isShowingWinLogo = False
@@ -40,7 +39,7 @@ async def start(ctx):
     while True:
         sct_img = sct.grab(bounding_box)
         sct_numpy = np.array(sct_img)
-        sct_numpy[250, 159] = [ 0, 0, 255, 255 ]
+        #sct_numpy[250, 159] = [ 0, 0, 255, 255 ]
         cv2.imshow('screen', sct_numpy)
         TeamHasWon = False
         victoriousTeam = team.NONE
@@ -49,62 +48,26 @@ async def start(ctx):
 
         #--------------------------t--------------------------
         for i in tStarPixels:
-            if list(sct_numpy[i[0], i[1]]) != colors.TSTAR.value:
-                TeamHasWon = False
-                victoriousTeam = team.NONE
-                proceedT = False
-                break
-            proceedT = True
-            TeamHasWon = True
-            victoriousTeam = team.TERRORISTS
+            TeamHasWon, victoriousTeam, proceedT = CheckPixels(sct_numpy, tStarPixels, colors.TSTAR, team.TERRORISTS)
 
         if proceedT:
-            for i in tBorderPixels:
-                if list(sct_numpy[i[0], i[1]]) != colors.TBORDER.value:
-                    TeamHasWon = False
-                    victoriousTeam = team.NONE
-                    proceedT = False
-                    break
-                proceedT = True
-                TeamHasWon = True
-                victoriousTeam = team.TERRORISTS
+            TeamHasWon, victoriousTeam, proceedT = CheckPixels(sct_numpy, tBorderPixels, colors.TBORDER, team.TERRORISTS)
 
         if proceedT:
-            for i in tKnifePixels:
-                print(str(list(sct_numpy[i[0], i[1]])) + " " + str(i[0]) + " " + str(i[1]))
-                if list(sct_numpy[i[0], i[1]]) != colors.TKNIFE.value:
-                    TeamHasWon = False
-                    victoriousTeam = team.NONE
-                    break
-                proceedT = True
-                TeamHasWon = True
-                victoriousTeam = team.TERRORISTS
+            TeamHasWon, victoriousTeam, proceedT = CheckPixels(sct_numpy, tKnifePixels, colors.TKNIFE, team.TERRORISTS)
 
 
         #--------------------------ct--------------------------
         if victoriousTeam == team.NONE:
-            for i in ctDarkWingPixels:
-                if list(sct_numpy[i[0], i[1]]) != colors.CTDARKWING.value:
-                    TeamHasWon = False
-                    victoriousTeam = team.NONE
-                    proceedCT = False
-                    break
-                proceedCT = True
-                TeamHasWon = True
-                victoriousTeam = team.COUNTERTERRORISTS
+            TeamHasWon, victoriousTeam, proceedCT = CheckPixels(sct_numpy, ctDarkWingPixels, colors.CTDARKWING, team.COUNTERTERRORISTS)
 
-        if proceedCT == True:
-            for i in ctWireCuttersPixels:
-                if list(sct_numpy[i[0], i[1]]) != colors.CTWIRECUTTERS.value:
-                    TeamHasWon = False
-                    victoriousTeam = team.NONE
-                    proceedCT = False
-                    break
-                proceedCT = True
-                TeamHasWon = True
-                victoriousTeam = team.COUNTERTERRORISTS
+        if proceedCT:
+            TeamHasWon, victoriousTeam, proceedCT = CheckPixels(sct_numpy, ctWireCuttersPixels, colors.CTWIRECUTTERS, team.COUNTERTERRORISTS)
 
+        if proceedCT:
+            TeamHasWon, victoriousTeam, proceedCT = CheckPixels(sct_numpy, ctBorderPixels, colors.CTBORDER, team.COUNTERTERRORISTS)
 
+        #print(CheckPixels(sct_numpy, ctDarkWingPixels, colors.CTBORDER, team.COUNTERTERRORISTS))
 
         if not TeamHasWon:
             isShowingWinLogo = False
@@ -127,6 +90,22 @@ async def start(ctx):
         if (cv2.waitKey(1) & 0xFF) == ord('q'):
             cv2.destroyAllWindows()
             break
+
+def CheckPixels(screen, pixels, color, currentteam):
+    proceed = True
+    teamhaswon = False
+    victoriousteam = team.NONE
+    for i in pixels:
+        if list(screen[i[0], i[1]]) != color.value:
+            teamhaswon = False
+            victoriousteam = team.NONE
+            proceed = False
+            break
+        victoriousteam = currentteam
+        proceed = True
+        teamhaswon = True
+    print(victoriousteam)
+    return (teamhaswon, victoriousteam, proceed)
 
 class colors(enum.Enum):
     TSTAR =         [ 61,  76,  86,  255 ]
