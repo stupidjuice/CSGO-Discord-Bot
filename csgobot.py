@@ -11,9 +11,13 @@ token = "token"
 
 client = commands.Bot(command_prefix = "!")
 
-tStarPixels = [ [195, 128], [200, 125], [256, 128] ]
-tBorderPixels = [ [224, 72], [192, 172], [182, 160], [280, 154] ]
-tKnifePixels = [ [250, 144], [235, 167] ]
+tStarPixels =         [ [195, 128], [200, 125], [256, 128], [268, 144], [196, 131] ]
+tBorderPixels =       [ [224, 72],  [192, 172], [182, 160], [280, 154], [212, 183] ]
+tKnifePixels =        [ [250, 144], [235, 167], [252, 145], [227, 173], [255, 136] ]
+
+ctDarkWingPixels =    [ [209, 96],  [244, 124], [249, 159], [240, 93],  [223, 91]  ]
+ctWireCuttersPixels = [ [209, 124], [260, 153], [271, 105], [221, 132], [213, 133] ]
+ctBorderPixels =      [ [224, 72],  [192, 172], [182, 160], [280, 154], [212, 183] ]
 
 @client.event
 async def on_ready():
@@ -36,44 +40,106 @@ async def start(ctx):
     while True:
         sct_img = sct.grab(bounding_box)
         sct_numpy = np.array(sct_img)
+        sct_numpy[250, 159] = [ 0, 0, 255, 255 ]
         cv2.imshow('screen', sct_numpy)
         TeamHasWon = False
+        victoriousTeam = team.NONE
+        proceedT = True
+        proceedCT = False
 
+        #--------------------------t--------------------------
         for i in tStarPixels:
-            #print(str(list(sct_numpy[i[0], i[1]])) + " " + str(colors.TSTAR.value))
-            if(list(sct_numpy[i[0], i[1]]) != colors.TSTAR.value):
+            if list(sct_numpy[i[0], i[1]]) != colors.TSTAR.value:
+                TeamHasWon = False
+                victoriousTeam = team.NONE
+                proceedT = False
                 break
+            proceedT = True
             TeamHasWon = True
-        for i in tBorderPixels:
-            if(list(sct_numpy[i[0], i[1]]) != colors.TBORDER.value):
-                break
-            TeamHasWon = True
-        for i in tKnifePixels:
-            if(list(sct_numpy[i[0], i[1]]) != colors.TKNIFE.value):
-                break
-            TeamHasWon = True
+            victoriousTeam = team.TERRORISTS
+
+        if proceedT:
+            for i in tBorderPixels:
+                if list(sct_numpy[i[0], i[1]]) != colors.TBORDER.value:
+                    TeamHasWon = False
+                    victoriousTeam = team.NONE
+                    proceedT = False
+                    break
+                proceedT = True
+                TeamHasWon = True
+                victoriousTeam = team.TERRORISTS
+
+        if proceedT:
+            for i in tKnifePixels:
+                print(str(list(sct_numpy[i[0], i[1]])) + " " + str(i[0]) + " " + str(i[1]))
+                if list(sct_numpy[i[0], i[1]]) != colors.TKNIFE.value:
+                    TeamHasWon = False
+                    victoriousTeam = team.NONE
+                    break
+                proceedT = True
+                TeamHasWon = True
+                victoriousTeam = team.TERRORISTS
+
+
+        #--------------------------ct--------------------------
+        if victoriousTeam == team.NONE:
+            for i in ctDarkWingPixels:
+                if list(sct_numpy[i[0], i[1]]) != colors.CTDARKWING.value:
+                    TeamHasWon = False
+                    victoriousTeam = team.NONE
+                    proceedCT = False
+                    break
+                proceedCT = True
+                TeamHasWon = True
+                victoriousTeam = team.COUNTERTERRORISTS
+
+        if proceedCT == True:
+            for i in ctWireCuttersPixels:
+                if list(sct_numpy[i[0], i[1]]) != colors.CTWIRECUTTERS.value:
+                    TeamHasWon = False
+                    victoriousTeam = team.NONE
+                    proceedCT = False
+                    break
+                proceedCT = True
+                TeamHasWon = True
+                victoriousTeam = team.COUNTERTERRORISTS
+
+
 
         if not TeamHasWon:
             isShowingWinLogo = False
 
-        print(isShowingWinLogo, TeamHasWon)
-
         if TeamHasWon and not isShowingWinLogo:
             isShowingWinLogo = True
-            twins+= 1
 
-            await ctx.send("Terrorists Win! " + "Ts: " + str(twins) + "      CTs: " + str(ctwins))
+            if victoriousTeam == team.TERRORISTS:
+                twins += 1
+                await ctx.send("Terrorists Win! " + "Ts: " + str(twins) + "      CTs: " + str(ctwins))
+            elif victoriousTeam == team.COUNTERTERRORISTS:
+                ctwins += 1
+                await ctx.send("Counter Terrorists Win! " + "Ts: " + str(twins) + "      CTs: " + str(ctwins))
+            
+            
             sleep(10)
 
-        sleep(1)
+        sleep(0.5)
 
         if (cv2.waitKey(1) & 0xFF) == ord('q'):
             cv2.destroyAllWindows()
             break
 
 class colors(enum.Enum):
-    TSTAR =   [ 61,  76,  86, 255 ]
-    TBORDER = [ 49,  61,  69, 255 ]
-    TKNIFE =  [ 30,  49,  63, 255 ]
+    TSTAR =         [ 61,  76,  86,  255 ]
+    TBORDER =       [ 49,  61,  69,  255 ]
+    TKNIFE =        [ 30,  49,  63,  255 ]
+
+    CTDARKWING =    [ 49,  42,  30,  255 ]
+    CTWIRECUTTERS = [ 164, 155, 141, 255 ]
+    CTBORDER =      [ 147, 123, 94,  255 ]
+
+class team(enum.Enum):
+    TERRORISTS = 0
+    COUNTERTERRORISTS = 1
+    NONE = 69
 
 client.run(token)
