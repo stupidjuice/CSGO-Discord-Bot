@@ -26,14 +26,14 @@ async def on_ready():
     print("I'm online now!")
 
 @client.command()
-async def start(ctx):
+async def start(ctx, rctwins = 0, rtwins = 0):
     isShowingWinLogo = False
     isShowingBombPlantText = False
     #wow nice variable name
     bombPlantedAndIsCountingRightNow = False
         
-    twins = 0
-    ctwins = 0
+    twins = rtwins
+    ctwins = rctwins
         
     await ctx.send("Starting Game!")
 
@@ -102,12 +102,18 @@ async def start(ctx):
 
             if victoriousTeam == team.TERRORISTS:
                 twins += 1
-                await ctx.send("Terrorists Win! " + "Ts: " + str(twins) + "      CTs: " + str(ctwins))
+                await ctx.send("Terrorists Win! " + "Ts: " + str(ctwins) + "      CTs: " + str(twins))
+                if twins == 8:
+                    await ctx.send("Terrorists Have Won the Game! Final Score: " + "Ts: " + str(ctwins) + "      CTs: " + str(twins))
+                    return
             elif victoriousTeam == team.COUNTERTERRORISTS:
                 ctwins += 1
-                await ctx.send("Counter Terrorists Win! " + "Ts: " + str(twins) + "      CTs: " + str(ctwins))
+                await ctx.send("Counter Terrorists Win! " + "Ts: " + str(ctwins) + "      CTs: " + str(twins))
+                if ctwins == 8:
+                    await ctx.send("Counter-Terrorists Have Won the Game! Final Score: " + "CTs: " + str(ctwins) + "      Ts: " + str(twins))
+                    return
             sleep(10)
-
+        
         if bombPlanted and not isShowingBombPlantText:
             isShowingBombPlantText = True
             
