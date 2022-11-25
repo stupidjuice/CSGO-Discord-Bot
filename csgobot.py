@@ -102,13 +102,13 @@ async def start(ctx, rctwins = 0, rtwins = 0):
 
             if victoriousTeam == team.TERRORISTS:
                 twins += 1
-                await ctx.send("Terrorists Win! " + "Ts: " + str(ctwins) + "      CTs: " + str(twins))
+                await ctx.send("Terrorists Win! " + "CTs: " + str(ctwins) + "      Ts: " + str(twins))
                 if twins == 8:
-                    await ctx.send("Terrorists Have Won the Game! Final Score: " + "Ts: " + str(ctwins) + "      CTs: " + str(twins))
+                    await ctx.send("Terrorists Have Won the Game! Final Score: " + "CTs: " + str(ctwins) + "      Ts: " + str(twins))
                     return
             elif victoriousTeam == team.COUNTERTERRORISTS:
                 ctwins += 1
-                await ctx.send("Counter Terrorists Win! " + "Ts: " + str(ctwins) + "      CTs: " + str(twins))
+                await ctx.send("Counter Terrorists Win! " + "CTs: " + str(ctwins) + "      Ts: " + str(twins))
                 if ctwins == 8:
                     await ctx.send("Counter-Terrorists Have Won the Game! Final Score: " + "CTs: " + str(ctwins) + "      Ts: " + str(twins))
                     return
